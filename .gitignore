@@ -1,0 +1,9 @@
+*~
+*tmp*
+*old*
+*ignore*
+*.git
+*.csv
+*.dat
+*.gpl
+*.txt
