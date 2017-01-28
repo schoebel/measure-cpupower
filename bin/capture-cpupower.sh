@@ -32,6 +32,9 @@ while [[ "$1" =~ ^-- ]]; do
     eval "$var=$val"
 done
 
+# include generic infastructure
+source "$(dirname "$0")/plugins/remote.sh" || exit $?
+
 # general parameters
 hardwaretype="${hardwaretype:-gamer_pc}" # result file naming
 vmtype="${vmtype:-bare_metal}"           # result file naming
@@ -54,13 +57,6 @@ time_format="${time_format:-%e:%U:%S:%M:%K:%c:%I:%O}"
 time_columns="${time_columns:-$time_format}"
 tmp_dir="/tmp/cpupower.$$"
 rm -rf /tmp/cpupower.*
-
-function remote
-{
-    local host="$1"
-    local cmd="$2"
-    ssh -C root@$host "$cmd"
-}
 
 function run_single_benchmark
 {
