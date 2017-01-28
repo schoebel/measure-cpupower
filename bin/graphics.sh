@@ -22,6 +22,9 @@
 picturetype="${picturetype:-pdfcairo}"
 pictureoptions="${pictureoptions:=fontscale 0.47 size 27cm, 19cm}"
 
+col_round="\$6"
+col_elapsed="\$7"
+
 function get_class
 {
     local name="$1"
@@ -57,14 +60,14 @@ function plot_files
 	    local para="$(get_para "$file")"
 	    cat $file |\
 		grep -v "^HEADER" |\
-		awk -F":" "{ count++; sum += \$4; } END{ print $para, sum / count; }"
+		awk -F":" "{ count++; sum += $col_elapsed; } END{ print $para, sum / count; }"
 	done | sort -n > latency-$class.dat
 	for file in ${classes[$class]}; do
 	    #echo "  FILE $file" >> /dev/stderr
 	    local para="$(get_para "$file")"
 	    cat $file |\
 		grep -v "^HEADER" |\
-		awk -F":" "{ count++; sum += \$4; if (\$3 > streams) { streams = \$3; } } END{ print $para, count * $para / sum; }"
+		awk -F":" "{ count++; sum += $col_elapsed; if ($col_round > streams) { streams = $col_round; } } END{ print $para, count * $para / sum; }"
 	done | sort -n > throughput-$class.dat
     done
 

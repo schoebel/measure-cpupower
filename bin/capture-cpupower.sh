@@ -68,10 +68,10 @@ function run_single_benchmark
     local para="$4"
     local instance="$5"
 
-    cmd="$time_cmd --format=\"MEASURED:\$(hostname):\$round:$time_format\" bash -c \"$cmd\""
+    cmd="$time_cmd --format=\"MEASURED:\$(hostname):\$(pwd):\$instance:\$para:\$round:$time_format\" bash -c \"$cmd\""
 
     local iterations="$(( max_iterations / para ))"
-    cmd="instance=$instance; round=0; $pre_cmd; while (( round++ < $iterations )); do ( $cmd > /dev/null); done"
+    cmd="instance=$instance; para=$para; round=0; $pre_cmd; while (( round++ < $iterations )); do ( $cmd > /dev/null); done"
 
     remote "$host" "$cmd"
 }
@@ -105,7 +105,7 @@ function run_benchmark_parallel
     local out_name="benchmark-$plugin-$hardwaretype-$vmtype-$host_count-$extra_name-$para.csv"
     echo "Generating $out_name"
     {
-	echo "HEADER:host:round:$time_columns"
+	echo "HEADER:host:pwd:instance:parallelism:round:$time_columns"
 	cat $tmp_dir/res.*.txt |\
 	    grep "^MEASURED:"
     } > $out_name
