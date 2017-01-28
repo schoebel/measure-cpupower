@@ -49,6 +49,7 @@ if [[ "$plugin" != "" ]]; then
     source "$(dirname "$0")/plugins/$plugin.sh" || exit $?
 else
     plugin="direct"
+    pre_cmd="${pre_cmd:-:}"
     cmd="${@:-i=0; while (( i++ < 100 )); do ls; done}"
 fi
 
@@ -62,13 +63,15 @@ rm -rf /tmp/cpupower.*
 function run_single_benchmark
 {
     local host="$1"
-    local cmd="$2"
-    local para="$3"
+    local pre_cmd="$2"
+    local cmd="$3"
+    local para="$4"
+    local instance="$5"
 
     cmd="$time_cmd --format=\"MEASURED:\$(hostname):\$round:$time_format\" bash -c \"$cmd\""
 
     local iterations="$(( max_iterations / para ))"
-    cmd="round=0; while (( round++ < $iterations )); do ( $cmd > /dev/null); done"
+    cmd="instance=$instance; round=0; $pre_cmd; while (( round++ < $iterations )); do ( $cmd > /dev/null); done"
 
     remote "$host" "$cmd"
 }
@@ -93,7 +96,7 @@ function run_benchmark_parallel
 	local index=$(( i % host_count ))
 	host="${host_array[$index]}"
 	#echo "$host $cmd"
-	run_single_benchmark "$host" "$cmd" "$para" \
+	run_single_benchmark "$host" "$pre_cmd" "$cmd" "$para" "$i" \
 	    2> "$tmp_dir/res.$i.txt" &
     done
 
