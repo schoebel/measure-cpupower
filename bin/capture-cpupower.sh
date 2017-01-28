@@ -38,6 +38,7 @@ source "$(dirname "$0")/plugins/remote.sh" || exit $?
 # general parameters
 hardwaretype="${hardwaretype:-gamer_pc}" # result file naming
 vmtype="${vmtype:-bare_metal}"           # result file naming
+extra_name="${extra_name:-standard}"     # result file naming
 host_list="${host_list:-box}" # used for round-robin load distribution
 max_para="${max_para:-128}"   # typically a power of 2
 max_iterations="${max_iterations:-$(( max_para * 4 ))}"
@@ -98,7 +99,7 @@ function run_benchmark_parallel
 
     wait
 
-    local out_name="benchmark-$plugin-$hardwaretype-$vmtype-$host_count-$para.csv"
+    local out_name="benchmark-$plugin-$hardwaretype-$vmtype-$host_count-$extra_name-$para.csv"
     echo "Generating $out_name"
     {
 	echo "HEADER:host:round:$time_columns"
