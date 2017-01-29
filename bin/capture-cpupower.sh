@@ -71,12 +71,13 @@ function run_single_benchmark
     local cmd="$3"
     local para="$4"
     local instance="$5"
+    local start="$6"
 
     cmd="$time_cmd --format=\"MEASURED:\$(hostname):\$(pwd):\$instance:\$para:\$round:$time_format\" bash -c \"$cmd\""
 
     if (( max_time > 0 )); then
         # time based benchmark repetitions
-	cmd="instance=$instance; para=$para; round=0; $pre_cmd; start=\$(date +%s); while (( \$(date +%s) < start + $max_time )); do ( $cmd > /dev/null); done"
+	cmd="start=$start; instance=$instance; para=$para; round=0; $pre_cmd; while (( \$(date +%s) < start + 10 )); do usleep 1000 || sleep 1; done; start=\$(date +%s); while (( \$(date +%s) < start + $max_time )); do ( $cmd > /dev/null); done"
     else
         # iteration-based method
 	local iterations="$(( max_iterations / para ))"
@@ -101,12 +102,13 @@ function run_benchmark_parallel
     rm -rf $tmp_dir
     mkdir -p $tmp_dir
 
+    local start="$(date +%s)"
     local i=0
     while (( i++ < para )); do
 	local index=$(( i % host_count ))
 	host="${host_array[$index]}"
 	#echo "$host $cmd"
-	run_single_benchmark "$host" "$pre_cmd" "$cmd" "$para" "$i" \
+	run_single_benchmark "$host" "$pre_cmd" "$cmd" "$para" "$i" "$start" \
 	    2> "$tmp_dir/res.$i.txt" &
     done
 
