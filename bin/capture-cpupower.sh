@@ -40,7 +40,7 @@ hardwaretype="${hardwaretype:-gamer_pc}" # result file naming
 vmtype="${vmtype:-bare_metal}"           # result file naming
 extra_name="${extra_name:-standard}"     # result file naming
 host_list="${host_list:-box}" # used for round-robin load distribution
-max_para="${max_para:-128}"   # typically a power of 2
+max_para="${max_para:-1024}"  # typically a power of 2
 accuracy_x="${accuracy_x:-8}" # should _then_ also be a power of 2
 max_time="${max_time:-60}"    # iterate bench until max runtime is exceeded
 # iteration-based method is only used when max_time == 0
