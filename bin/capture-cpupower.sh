@@ -41,7 +41,8 @@ vmtype="${vmtype:-bare_metal}"           # result file naming
 extra_name="${extra_name:-standard}"     # result file naming
 host_list="${host_list:-box}" # used for round-robin load distribution
 max_para="${max_para:-128}"   # typically a power of 2
-max_iterations="${max_iterations:-$(( max_para * 4 ))}"
+max_factor="${max_factor:-6}"
+max_iterations="${max_iterations:-$(( max_para * max_factor ))}"
 
 # which command should be repeatedly executed?
 plugin="${plugin:-wordpress}"
