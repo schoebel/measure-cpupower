@@ -24,6 +24,8 @@ pictureoptions="${pictureoptions:=fontscale 0.47 size 27cm, 19cm}"
 
 col_round="\$6"
 col_elapsed="\$7"
+col_user="\$8"
+col_system="\$9"
 
 function get_class
 {
@@ -69,6 +71,13 @@ function plot_files
 		grep -v "^HEADER" |\
 		awk -F":" "{ count++; sum += $col_elapsed; if ($col_round > streams) { streams = $col_round; } } END{ print $para, count * $para / sum; }"
 	done | sort -n > throughput-$class.dat
+	for file in ${classes[$class]}; do
+	    #echo "  FILE $file" >> /dev/stderr
+	    local para="$(get_para "$file")"
+	    cat $file |\
+		grep -v "^HEADER" |\
+		awk -F":" "{ count++; sum += $col_user + $col_system; } END{ print $para, sum / count; }"
+	done | sort -n > overhead-$class.dat
     done
 
     echo "------ PLOTTING latency"
@@ -99,6 +108,22 @@ set output "througput.pdf";
 set title "Request Throughput";
 set xlabel "Number of Parallel Processes";
 set ylabel "Requests per Second"
+set logscale x;
+plot $plot;
+EOF
+
+    echo "------ PLOTTING overhead"
+    local plot=""
+    for file in overhead-*.dat; do
+	[[ "$plot" != "" ]] &&  plot+=", "
+	plot+="\"$file\" with lines"
+    done
+gnuplot <<EOF
+set term $picturetype;
+set output "overhead.pdf";
+set title "Overhead caused by CPU Caches and Kernel";
+set xlabel "Number of Parallel Processes";
+set ylabel "Average User+System Time"
 set logscale x;
 plot $plot;
 EOF
