@@ -41,6 +41,13 @@ function get_para
     basename "$name" | sed 's/^.*-\([0-9]\+\)\.csv/\1/'
 }
 
+function filter
+{
+    # ignore last line which may be disturbed by less parallelism
+    grep -v "^HEADER" |\
+	head --lines=-1
+}
+
 function plot_files
 {
     local infiles="$1"
@@ -62,22 +69,19 @@ function plot_files
 	for file in ${classes[$class]}; do
 	    #echo "  FILE $file" >> /dev/stderr
 	    local para="$(get_para "$file")"
-	    cat $file |\
-		grep -v "^HEADER" |\
+	    filter < $file |\
 		awk -F":" "{ count++; sum += $col_elapsed; } END{ print $para, sum / count; }"
 	done | sort -n > latency-$class.dat
 	for file in ${classes[$class]}; do
 	    #echo "  FILE $file" >> /dev/stderr
 	    local para="$(get_para "$file")"
-	    cat $file |\
-		grep -v "^HEADER" |\
+	    filter < $file |\
 		awk -F":" "{ count++; sum += $col_elapsed; if ($col_round > streams) { streams = $col_round; } } END{ print $para, count * $para / sum; }"
 	done | sort -n > throughput-$class.dat
 	for file in ${classes[$class]}; do
 	    #echo "  FILE $file" >> /dev/stderr
 	    local para="$(get_para "$file")"
-	    cat $file |\
-		grep -v "^HEADER" |\
+	    filter < $file |\
 		awk -F":" "{ count++; sum += $col_user + $col_system; } END{ print $para, sum / count; }"
 	done | sort -n > overhead-$class.dat
     done
