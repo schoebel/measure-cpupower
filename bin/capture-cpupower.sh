@@ -33,10 +33,10 @@ while [[ "$1" =~ ^-- ]]; do
 done
 
 # general parameters
-hardwaretype="${hardwaretype:-gamer_pc}"
-vmtype="${vmtype:-bare_metal}"
-host_list="${host_list:-box}"
-max_para="${max_para:-128}"
+hardwaretype="${hardwaretype:-gamer_pc}" # result file naming
+vmtype="${vmtype:-bare_metal}"           # result file naming
+host_list="${host_list:-box}" # used for round-robin load distribution
+max_para="${max_para:-128}"   # typically a power of 2
 max_iterations="${max_iterations:-$(( max_para * 4 ))}"
 
 # which command should be repeatedly executed?
