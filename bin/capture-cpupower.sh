@@ -41,6 +41,8 @@ vmtype="${vmtype:-bare_metal}"           # result file naming
 extra_name="${extra_name:-standard}"     # result file naming
 host_list="${host_list:-box}" # used for round-robin load distribution
 max_para="${max_para:-128}"   # typically a power of 2
+max_time="${max_time:-60}"
+# iteration-based method is only used when max_time == 0
 max_factor="${max_factor:-6}"
 max_iterations="${max_iterations:-$(( max_para * max_factor ))}"
 
@@ -71,8 +73,14 @@ function run_single_benchmark
 
     cmd="$time_cmd --format=\"MEASURED:\$(hostname):\$(pwd):\$instance:\$para:\$round:$time_format\" bash -c \"$cmd\""
 
-    local iterations="$(( max_iterations / para ))"
-    cmd="instance=$instance; para=$para; round=0; $pre_cmd; while (( round++ < $iterations )); do ( $cmd > /dev/null); done"
+    if (( max_time > 0 )); then
+        # time based benchmark repetitions
+	cmd="instance=$instance; para=$para; round=0; $pre_cmd; start=\$(date +%s); while (( \$(date +%s) < start + $max_time )); do ( $cmd > /dev/null); done"
+    else
+        # iteration-based method
+	local iterations="$(( max_iterations / para ))"
+	cmd="instance=$instance; para=$para; round=0; $pre_cmd; while (( round++ < $iterations )); do ( $cmd > /dev/null); done"
+    fi
 
     remote "$host" "$cmd"
 }
@@ -118,7 +126,12 @@ function run_series
     local para=1
     local incr=1
     while (( para <= max_para )); do
-	echo "---- para=$para"
+	if (( max_time > 0 )); then
+	    local txt="$max_time s"
+	else
+	    local txt="$max_iterations iterations"
+	fi
+	echo "---- para=$para BENCH $txt on $host_list"
 	run_benchmark_parallel $para
 	(( para += incr ))
 	if (( !(para % (incr * 4)) )); then
