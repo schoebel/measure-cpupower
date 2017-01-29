@@ -41,7 +41,8 @@ vmtype="${vmtype:-bare_metal}"           # result file naming
 extra_name="${extra_name:-standard}"     # result file naming
 host_list="${host_list:-box}" # used for round-robin load distribution
 max_para="${max_para:-128}"   # typically a power of 2
-max_time="${max_time:-60}"
+accuracy_x="${accuracy_x:-8}" # should _then_ also be a power of 2
+max_time="${max_time:-60}"    # iterate bench until max runtime is exceeded
 # iteration-based method is only used when max_time == 0
 max_factor="${max_factor:-6}"
 max_iterations="${max_iterations:-$(( max_para * max_factor ))}"
@@ -134,7 +135,7 @@ function run_series
 	echo "---- para=$para BENCH $txt on $host_list"
 	run_benchmark_parallel $para
 	(( para += incr ))
-	if (( !(para % (incr * 4)) )); then
+	if (( !(para % (incr * accuracy_x)) )); then
 	    (( incr *= 2 ));
 	fi
     done
