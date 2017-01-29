@@ -47,14 +47,26 @@ max_time="${max_time:-60}"    # iterate bench until max runtime is exceeded
 max_factor="${max_factor:-6}"
 max_iterations="${max_iterations:-$(( max_para * max_factor ))}"
 
-# which command should be repeatedly executed?
-plugin="${plugin:-wordpress}"
-if [[ "$plugin" != "" ]]; then
-    source "$(dirname "$0")/plugins/$plugin.sh" || exit $?
+# Which command should be repeatedly executed?
+# Plugins will usually set both $pre_cmd and $cmd and should be used for
+# lab automation of larger projects.
+# They can have their own sub-parameters.
+# The generic $cmd provisioning from outside is intended for quick generic
+# test setups on-the-fly, not for automating large test series.
+plugin_list="${plugin_list:-wordpress}"
+if [[ "$plugin_list" != "" ]]; then
+    for plugin in $plugin_list; do
+	source "$(dirname "$0")/plugins/$plugin.sh" || exit $?
+    done
+    plugin_txt="${plugin_txt:-$(echo "$plugin_list" | sed 's:^.*/::g' | sed 's/ \+/_/g')}"
 else
-    plugin="direct"
     pre_cmd="${pre_cmd:-:}"
     cmd="${@:-i=0; while (( i++ < 100 )); do ls; done}"
+    plugin_txt="${plugin_txt:-direct}"
+    # show only short commands in the names (long ones will be obfuscating)
+    if ! [[ "$cmd" =~ " " ]]; then
+	plugin_txt+="_$cmd"
+    fi
 fi
 
 # further definitions
@@ -114,7 +126,7 @@ function run_benchmark_parallel
 
     wait
 
-    local out_name="benchmark-$plugin-$hardwaretype-$vmtype-$host_count-$extra_name-$para.csv"
+    local out_name="benchmark-$plugin_txt-$hardwaretype-$vmtype-$host_count-$extra_name-$para.csv"
     echo "Generating $out_name"
     {
 	echo "HEADER:host:pwd:instance:parallelism:round:$time_columns"
