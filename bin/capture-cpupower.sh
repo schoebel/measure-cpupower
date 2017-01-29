@@ -55,7 +55,7 @@ fi
 
 # further definitions
 time_cmd="${time_cmd:-/usr/bin/time}"
-time_format="${time_format:-%e:%U:%S:%M:%K:%c:%I:%O}"
+time_format="${time_format:-%e:%U:%S:%M:%K:%c:%w:%I:%O:%x}"
 time_columns="${time_columns:-$time_format}"
 tmp_dir="/tmp/cpupower.$$"
 rm -rf /tmp/cpupower.*
