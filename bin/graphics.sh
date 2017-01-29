@@ -30,7 +30,9 @@ col_system="\$9"
 function get_class
 {
     local name="$1"
-    basename "$name" | sed 's/^\(.*\)-[0-9]\+\.csv/\1/'
+    basename "$name" |\
+	sed 's/^\(.*\)-[0-9]\+\.csv/\1/' |\
+	sed 's/benchmark-//g'
 }
 
 function get_para
