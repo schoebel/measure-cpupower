@@ -40,7 +40,7 @@ hardwaretype="${hardwaretype:-gamer_pc}" # result file naming
 vmtype="${vmtype:-bare_metal}"           # result file naming
 extra_name="${extra_name:-standard}"     # result file naming
 host_list="${host_list:-box}" # used for round-robin load distribution
-max_para="${max_para:-1024}"  # typically a power of 2
+max_para="${max_para:-2048}"  # typically a power of 2
 accuracy_x="${accuracy_x:-8}" # should _then_ also be a power of 2
 max_time="${max_time:-60}"    # iterate bench until max runtime is exceeded
 # iteration-based method is only used when max_time == 0
@@ -76,33 +76,12 @@ time_columns="${time_columns:-$time_format}"
 tmp_dir="/tmp/cpupower.$$"
 rm -rf /tmp/cpupower.*
 
-function run_single_benchmark
+function run_benchmarks
 {
-    local host="$1"
-    local pre_cmd="$2"
-    local cmd="$3"
-    local para="$4"
-    local instance="$5"
-    local start="$6"
+    local pre_cmd="$1"
+    local main_cmd="$2"
+    local para="$3"
 
-    cmd="$time_cmd --format=\"MEASURED:\$(hostname):\$(pwd):\$instance:\$para:\$round:$time_format\" bash -c \"$cmd\""
-
-    if (( max_time > 0 )); then
-        # time based benchmark repetitions
-	cmd="start=$start; instance=$instance; para=$para; round=0; $pre_cmd; while (( \$(date +%s) < start + 10 )); do usleep 1000 || sleep 1; done; start=\$(date +%s); while (( \$(date +%s) < start + $max_time )); do ( $cmd > /dev/null); done"
-    else
-        # iteration-based method
-	local iterations="$(( max_iterations / para ))"
-	cmd="instance=$instance; para=$para; round=0; $pre_cmd; while (( round++ < $iterations )); do ( $cmd > /dev/null); done"
-    fi
-
-    remote "$host" "$cmd"
-}
-
-function run_benchmark_parallel
-{
-    local para="$1"
-    
     local -a host_array
     local host_count=0
     local host
@@ -114,14 +93,30 @@ function run_benchmark_parallel
     rm -rf $tmp_dir
     mkdir -p $tmp_dir
 
-    local start="$(date +%s)"
+    main_cmd="$time_cmd --format=\"MEASURED:\$(hostname):\$(pwd):\$instance:\$para:\$round:$time_format\" bash -c \"$main_cmd\""
+
+    if (( max_time > 0 )); then
+        # time based benchmark repetitions
+	local start="$(date +%s)"
+	main_cmd="start=$start; para=$para; round=0; $pre_cmd; while (( \$(date +%s) < start + 10 )); do usleep 1000 || sleep 1; done; start=\$(date +%s); while (( \$(date +%s) < start + $max_time )); do (( round++ )); ($main_cmd) > /dev/null; done"
+    else
+        # iteration-based method
+	local iterations="$(( max_iterations / para ))"
+	main_cmd="para=$para; round=0; $pre_cmd; while (( round++ < $iterations )); do ($main_cmd) > /dev/null; done"
+    fi
+
+    local -A cmd_arr
     local i=0
     while (( i++ < para )); do
 	local index=$(( i % host_count ))
 	host="${host_array[$index]}"
-	#echo "$host $cmd"
-	run_single_benchmark "$host" "$pre_cmd" "$cmd" "$para" "$i" "$start" \
-	    2> "$tmp_dir/res.$i.txt" &
+	#echo "$host $main_cmd"
+	cmd_arr[$host]+=" $i"
+    done
+
+    for host in ${!cmd_arr[*]}; do
+	remote "$host" "rm -f /tmp/cpupower.*; for instance in ${cmd_arr[$host]}; do ($main_cmd) 2> /tmp/cpupower.\$instance & done; wait; cat /tmp/cpupower.*" \
+	    > "$tmp_dir/res.$host.txt" &
     done
 
     wait
@@ -134,6 +129,13 @@ function run_benchmark_parallel
 	    grep "^MEASURED:"
     } > $out_name
     rm -rf $tmp_dir
+}
+
+function run_benchmark_parallel
+{
+    local para="$1"
+
+    run_benchmarks "$pre_cmd" "$cmd" "$para"
 }
 
 function run_series

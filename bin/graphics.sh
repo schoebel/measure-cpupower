@@ -99,6 +99,7 @@ set title "Request Latency";
 set xlabel "Number of Parallel Processes";
 set ylabel "Time per Request [s]"
 set logscale x;
+set logscale y;
 plot $plot;
 EOF
 
