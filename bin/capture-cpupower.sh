@@ -18,6 +18,29 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # Developed during my spare time
+shopt -s nullglob
+self="$0"
+rootdir="$(cd "$(dirname "$self")/.." && pwd)"
+
+# Include config files in current directory and parents
+dir="."
+limit=30
+while true; do
+    dir="$(cd $dir && pwd)"
+    for file in $dir/*.conf; do
+	echo "Including $dir/$file"
+	source $dir/$file || exit $?
+    done
+    if [[ "$dir" = "$rootdir" ]] ||\
+	[[ "$dir" = "$HOME" ]] ||\
+	[[ "$dir" = "/" ]] ||\
+	[[ "$dir" = "$olddir" ]] ||\
+	(( limit-- <= 0 )); then
+	break
+    fi
+    olddir="$dir"
+    dir="$dir/.."
+done
 
 # generic cmdline parameters
 while [[ "$1" =~ ^-- ]]; do
@@ -33,7 +56,7 @@ while [[ "$1" =~ ^-- ]]; do
 done
 
 # include generic infastructure
-source "$(dirname "$0")/plugins/remote.sh" || exit $?
+source "$(dirname "$self")/plugins/remote.sh" || exit $?
 
 # General parameters
 #
@@ -91,7 +114,7 @@ plugin_list="${plugin_list:-wordpress}"
 
 if [[ "$plugin_list" != "" ]]; then
     for plugin in $plugin_list; do
-	source "$(dirname "$0")/plugins/$plugin.sh" || exit $?
+	source "$(dirname "$self")/plugins/$plugin.sh" || exit $?
     done
     plugin_txt="${plugin_txt:-$(echo "$plugin_list" | sed 's:^.*/::g' | sed 's/ \+/_/g')}"
 else
