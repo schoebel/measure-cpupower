@@ -20,7 +20,7 @@
 # Developed during my spare time
 
 picturetype="${picturetype:-pdfcairo}"
-pictureoptions="${pictureoptions:=fontscale 0.47 size 27cm, 19cm}"
+pictureoptions="${pictureoptions:=fontscale 0.6 size 26cm, 18cm}"
 
 col_round="\$6"
 col_elapsed="\$7"
@@ -93,7 +93,7 @@ function plot_files
 	plot+="\"$file\" with lines"
     done
 gnuplot <<EOF
-set term $picturetype;
+set term $picturetype $pictureoptions;
 set output "latency.pdf";
 set title "Request Latency";
 set xlabel "Number of Parallel Processes";
@@ -110,7 +110,7 @@ EOF
 	plot+="\"$file\" with lines"
     done
 gnuplot <<EOF
-set term $picturetype;
+set term $picturetype $pictureoptions;
 set output "througput.pdf";
 set title "Request Throughput";
 set xlabel "Number of Parallel Processes";
@@ -126,7 +126,7 @@ EOF
 	plot+="\"$file\" with lines"
     done
 gnuplot <<EOF
-set term $picturetype;
+set term $picturetype $pictureoptions;
 set output "overhead.pdf";
 set title "Overhead caused by CPU Caches and Kernel";
 set xlabel "Number of Parallel Processes";
