@@ -181,11 +181,13 @@ function run_benchmarks
 
     local out_name="benchmark-$plugin_txt-$hardwaretype-$vmtype-$host_count-$extra_name-$para.csv"
     echo "Generating $out_name"
-    {
-	echo "HEADER:host:pwd:instance:parallelism:round:$time_columns"
-	cat $tmp_dir/res.*.txt |\
-	    grep "^MEASURED:"
-    } > $out_name
+    if (( !dry_run )); then
+	{
+	    echo "HEADER:host:pwd:instance:parallelism:round:$time_columns"
+	    cat $tmp_dir/res.*.txt |\
+		grep "^MEASURED:"
+	} > $out_name
+    fi
     rm -rf $tmp_dir
 }
 

@@ -20,10 +20,15 @@
 # Developed during my spare time
 
 # infrastucture for remote execution
+dry_run="${dry_run:-0}"
 
 function remote
 {
     local host="$1"
     local cmd="$2"
+    if (( dry_run )); then
+	echo "DRY_RUN ssh -C root@$host $cmd"
+	return
+    fi
     ssh -C root@$host "$cmd"
 }

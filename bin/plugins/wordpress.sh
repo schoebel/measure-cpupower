@@ -43,7 +43,9 @@ if ! [[ -f $bench_dir/wp-config.php ]]; then
 fi
 for host in $host_list; do
     remote "$host" "mkdir -p \"$base_dir\""
-    rsync -av --exclude=".git" "$bench_dir" "root@$host:$base_dir/" || exit $?
+    if (( !dry_run )); then
+	rsync -av --exclude=".git" "$bench_dir" "root@$host:$base_dir/" || exit $?
+    fi
     if (( create_copies )); then
 	copy_cmd="for copyname in $(eval echo \"$bench_dir.{0..$max_para}\"); do rsync -a $bench_dir/ \$copyname/; done; sync"
 	remote "$host" "$copy_cmd" &
