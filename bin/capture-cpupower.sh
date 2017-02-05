@@ -35,15 +35,49 @@ done
 # include generic infastructure
 source "$(dirname "$0")/plugins/remote.sh" || exit $?
 
-# general parameters
+# General parameters
+#
+# $hardwaretype should describe the physical iron.
+# It is used for naming the output files.
 hardwaretype="${hardwaretype:-gamer_pc}" # result file naming
+
+# $vmtype should be similar to one of the following:
+#  bare_metal - no vitualization
+#  lxc        - running in LXC containers
+#  kvm        - running in KVM
+#  vmware     - running under vmware
+#  .... and so on
 vmtype="${vmtype:-bare_metal}"           # result file naming
+
+# $extra_name is for further characterizations, such as variants etc.
 extra_name="${extra_name:-standard}"     # result file naming
+
+# $host_list should be a whitespace-separated list of hostnames where
+# root login via ssh is permitted (e.g. ssh-agent).
+# The hosts from this list are used round-robin for distributing the
+# load onto them.
+# Important! _all_ hosts from this list should name VMs residing on the
+# same phyiscal iron. Otherwise results will not be comparable between
+# virtualized and non-vortualized variants. Use this highly recommended
+# setup for determining the _overhead_ of virtualization.
 host_list="${host_list:-box}" # used for round-robin load distribution
+
+# $max_para specifies the total maximum number of programs running
+# in parallel.
 max_para="${max_para:-2048}"  # typically a power of 2
+
+# The following determines the density on the x axis in logarithmic scale.
+# Usually you will not need to change this.
 accuracy_x="${accuracy_x:-8}" # should _then_ also be a power of 2
+
+# By default, the duration of a measurement is specified in units of
+# realtime. The number of iterations will then vary depending on the
+# speed of the hardware. Usually this delivers good accuracy on a wide
+# variety of hardware platforms.
+# You may increase this to e.g. 180s when better accuracy is required.
 max_time="${max_time:-60}"    # iterate bench until max runtime is exceeded
-# iteration-based method is only used when max_time == 0
+
+# The old iteration-based method is only used when max_time == 0
 max_factor="${max_factor:-6}"
 max_iterations="${max_iterations:-$(( max_para * max_factor ))}"
 
@@ -54,6 +88,7 @@ max_iterations="${max_iterations:-$(( max_para * max_factor ))}"
 # The generic $cmd provisioning from outside is intended for quick generic
 # test setups on-the-fly, not for automating large test series.
 plugin_list="${plugin_list:-wordpress}"
+
 if [[ "$plugin_list" != "" ]]; then
     for plugin in $plugin_list; do
 	source "$(dirname "$0")/plugins/$plugin.sh" || exit $?
